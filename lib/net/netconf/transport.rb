@@ -110,15 +110,6 @@ module Netconf
 
       rsp_nx = Nokogiri::XML(send_and_receive(cmd_nx.to_xml))
 
-      # the following removes only the default namespace (xmlns)
-      # definitions from the document.  This is an alternative
-      # to using #remove_namespaces! which would remove everything
-      # including vendor specific namespaces.  So this approach is a
-      # nice "compromise" ... just don't know what it does
-      # performance-wise on large datasets.
-
-      rsp_nx.traverse { |n| n.namespace = nil }
-
       # set the response context to the root node; <rpc-reply>
 
       rsp_nx = rsp_nx.root
@@ -126,14 +117,14 @@ module Netconf
       # check for rpc-error elements.  these could be
       # located anywhere in the structured response
 
-      rpc_errs = rsp_nx.xpath('//self::rpc-error')
+      rpc_errs = rsp_nx.xpath('//self::base1:rpc-error', base1: 'urn:ietf:params:xml:ns:netconf:base:1.0')
       if rpc_errs.count.positive?
 
         # look for rpc-errors that have a severity == 'error'
         # in some cases the rpc-error is generated with
         # severity == 'warning'
 
-        sev_err = rpc_errs.xpath('error-severity[. = "error"]')
+        sev_err = rpc_errs.xpath('base1:error-severity[. = "error"]', base1: 'urn:ietf:params:xml:ns:netconf:base:1.0')
 
         # if there are rpc-error with severity == 'error'
         # or if the caller wants to raise if severity == 'warning'
